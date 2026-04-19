@@ -1,110 +1,154 @@
 package org.example.springbootdeveloperassessment.service;
 
 import jakarta.validation.Valid;
+import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.example.springbootdeveloperassessment.dto.PartialUpdateDto;
 import org.example.springbootdeveloperassessment.exception.EmployeeNotFoundException;
 import org.example.springbootdeveloperassessment.model.Employee;
 import org.example.springbootdeveloperassessment.repository.EmployeeRepository;
 import org.example.springbootdeveloperassessment.dto.EmployeeRequestDto;
 import org.example.springbootdeveloperassessment.dto.EmployeeResponseDto;
 import org.example.springbootdeveloperassessment.exception.DuplicateEmailException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
-import java.awt.print.Pageable;
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
-import static java.util.Locale.filter;
 
 @Service
-@RequiredArgsConstructor
 @Validated
+@RequiredArgsConstructor
+@Slf4j
+@Transactional
 public class EmployeeServiceImpl implements EmployeeService{
 
-    private final EmployeeRepository repository;
+    private static final BigDecimal INTERN_MIN_SALARY   = new BigDecimal("15000.00");
+    private static final BigDecimal DEFAULT_MIN_SALARY  = new BigDecimal("30000.00");
 
+    private final EmployeeRepository repository;
+    private final Validator validator;
+
+    @Transactional
     @Override
     public EmployeeResponseDto createEmployee(@Valid EmployeeRequestDto dto) {
 
-        repository.findByEmail(dto.email()).
+        repository.findByEmail(dto.getEmail()).
                 ifPresent(e -> {throw new DuplicateEmailException("Email already Exist");
         });
 
-        validateSalary(dto.department(), dto.salary());
+        validateSalary(dto.getDepartment(), dto.getSalary());
 
-    }
-
-    @Override
-    public List<EmployeeResponseDto> getAllEmployees(Pageable pageable) {
-
-        return repository.findAllEmployees(pageable).map(this::mapToDto);
-
-    }
-
-    @Override
-    public EmployeeResponseDto getEmployeeById(Long id) {
-
-        Employee e = repository.findById(id)
-                .orElseThrow(() -> new EmployeeNotFoundException("Employee not found"));
+        Employee e = repository.save(mapToEntity(dto));
 
         return mapToDto(e);
     }
 
     @Override
-    public EmployeeResponseDto updateEmployee(Long id, @Valid EmployeeRequestDto dto) {
+    @Transactional
+    public Page<EmployeeResponseDto> findAll(String department, Boolean active, Pageable pageable) {
 
-        Employee e  = repository.findById(id)
-                .orElseThrow(() -> new EmployeeNotFoundException("Employee not found"));
+        List<Employee> employees = repository.findAll();
+        List<EmployeeResponseDto> dtoResponse = employees.stream().map(this::mapToDto).toList();
 
-        repository.findByEmail(dto.email())
-                .ifPresent(e -> {
-                    if (!e.getId().equals(id)){
-                        throw new DuplicateEmailException("Email already exists");}
-        });
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + pageable.getPageSize(), dtoResponse.size());
+        List<EmployeeResponseDto> page = start >
+                dtoResponse.size() ? Collections.emptyList() :
+                dtoResponse.subList(start,end);
 
-        validateSalary(dto.department(), dto.salary());
-
-        e.setFirstName(dto.firstName());
-        e.setLastName(dto.lastName());
-        e.setEmail(dto.email());
-        e.setDepartment(dto.department());
-        e.setSalary(dto.salary());
-        e.setDateOfJoining(dto.dateOfJoining());
-        e.setActive(dto.active());
-
-        return mapToDto(repository.save(e));
+        return new PageImpl<>(page, pageable, dtoResponse.size());
     }
 
     @Override
-    public List<EmployeeResponseDto> findBySalaryRange(BigDecimal min) {
+    public EmployeeResponseDto findById(Long id) {
 
+        Employee employee = findId(id);
 
+        return mapToDto(employee);
+    }
+
+    @Override
+    public EmployeeResponseDto updateEmployee(Long id, @Valid EmployeeRequestDto dto) {
+
+        Employee employee = findId(id);
+        checkDuplicateEmail(dto.getEmail(),id);
+
+        validateSalary(dto.getDepartment(), dto.getSalary());
+
+        employee.setFirstName(dto.getFirstName());
+        employee.setLastName(dto.getLastName());
+        employee.setEmail(dto.getEmail());
+        employee.setDepartment(dto.getDepartment());
+        employee.setSalary(dto.getSalary());
+        employee.setDateOfJoining(dto.getDateOfJoining());
+        employee.setActive(dto.getActive());
+
+        return mapToDto(repository.save(employee));
+    }
+
+    @Override
+    public EmployeeResponseDto partialUpdate(Long id, PartialUpdateDto dto) {
+
+        Employee employee = findId(id);
+
+        if (dto.getSalary() != null) {
+            String dept = dto.getDepartment() != null ? dto.getDepartment() : employee.getDepartment();
+            validateSalary(dept, dto.getSalary());
+            employee.setSalary(dto.getSalary());
+        }
+        if (dto.getDepartment() != null) {
+            employee.setDepartment(dto.getDepartment());
+        }
+        if (dto.getActive() != null) {
+            employee.setActive(dto.getActive());
+        }
+
+        return mapToDto(repository.save(employee));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<EmployeeResponseDto> findBySalaryRange(BigDecimal min, BigDecimal max) {
+
+        return repository.findBySalaryRange(min, max)
+                .stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
     }
 
     @Override
     public void softDeleteEmployee(Long id) {
 
-        Employee e = repository.findById(id)
-                .orElseThrow(() -> new EmployeeNotFoundException("Employee not Found"));
+        Employee employee = findId(id);
 
-        e.setActive(false);
-        repository.save(e);
+        employee.setActive(false);
+        repository.save(employee);
     }
 
     @Override
     public void hardDeleteEmployee(Long id) {
 
-        Employee e = repository.findById(id)
-                .orElseThrow(() -> new EmployeeNotFoundException("Employee not Found"));
+        Employee employee = findId(id);
 
-        if (e.getActive()){
+        if (employee.getActive()){
             throw new RuntimeException("Cannot hard delete active employee");
         }
-        else repository.delete(e);
-
+        else repository.delete(employee);
     }
+
+
+    //Private methods
 
     private void validateSalary(String department, BigDecimal salary){
 
@@ -121,16 +165,16 @@ public class EmployeeServiceImpl implements EmployeeService{
 
     private Employee mapToEntity(EmployeeRequestDto dto) {
         return Employee.builder()
-                .id(dto.id())
-                .firstName(dto.firstName())
-                .lastName(dto.lastName())
-                .email(dto.email())
-                .department(dto.department())
-                .salary(dto.salary())
-                .dateOfJoining(dto.dateOfJoining())
-                .active(dto.active())
-                .createdAt(dto.createdAt())
-                .updatedAt(dto.updatedAt())
+                .id(dto.getId())
+                .firstName(dto.getFirstName())
+                .lastName(dto.getLastName())
+                .email(dto.getEmail())
+                .department(dto.getDepartment())
+                .salary(dto.getSalary())
+                .dateOfJoining(dto.getDateOfJoining())
+                .active(dto.getActive())
+                .createdAt(dto.getCreatedAt())
+                .updatedAt(dto.getUpdatedAt())
                 .build();
     }
 
@@ -149,4 +193,19 @@ public class EmployeeServiceImpl implements EmployeeService{
                 .build();
     }
 
+    private void checkDuplicateEmail(String email, Long excludeId) {
+
+        Optional<Employee> existing = repository.findByEmail(email);
+
+        existing.ifPresent(e -> {
+            if (!e.getId().equals(excludeId)) {
+                throw new DuplicateEmailException("Email already exist");
+            }
+        });
+    }
+
+    private Employee findId(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new EmployeeNotFoundException("Employee not Found"));
+    }
 }

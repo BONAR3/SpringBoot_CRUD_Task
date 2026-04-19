@@ -17,13 +17,10 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
     Optional<Employee> findByEmail(String email);
 
-    List<EmployeeResponseDto> findAllEmployees();
-
-    List<EmployeeResponseDto> findB();
-
     List<Employee> findByActiveTrue();
 
     @Query("SELECT e FROM Employee e WHERE e.salary BETWEEN :min AND :max")
+
     List<Employee> findBySalaryRange(@Param("min")BigDecimal min, @Param("max") BigDecimal max);
 
 }

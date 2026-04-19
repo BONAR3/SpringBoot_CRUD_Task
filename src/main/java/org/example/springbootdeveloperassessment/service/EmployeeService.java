@@ -1,23 +1,29 @@
 package org.example.springbootdeveloperassessment.service;
 
+import jakarta.validation.Valid;
 import org.example.springbootdeveloperassessment.dto.EmployeeRequestDto;
 import org.example.springbootdeveloperassessment.dto.EmployeeResponseDto;
+import org.example.springbootdeveloperassessment.dto.PartialUpdateDto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import java.awt.print.Pageable;
 import java.math.BigDecimal;
 import java.util.List;
+
 
 public interface EmployeeService {
 
     EmployeeResponseDto createEmployee (EmployeeRequestDto dto);
 
-    List<EmployeeResponseDto> getAllEmployees(Pageable pageable);
+    Page<EmployeeResponseDto> findAll (String department, Boolean active, Pageable pageable);
 
-    EmployeeResponseDto getEmployeeById(Long id);
+    EmployeeResponseDto findById(Long id);
 
-    EmployeeResponseDto updateEmployee(Long id, EmployeeRequestDto dto);
+    EmployeeResponseDto updateEmployee(Long id, @Valid EmployeeRequestDto dto);
 
-    List<EmployeeResponseDto> findBySalaryRange(BigDecimal min);
+    EmployeeResponseDto partialUpdate(Long id, PartialUpdateDto dto);
+
+    List<EmployeeResponseDto> findBySalaryRange(BigDecimal min, BigDecimal max);
 
     void softDeleteEmployee (Long id);
 
