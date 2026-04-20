@@ -6,7 +6,6 @@ import org.example.springbootdeveloperassessment.dto.EmployeeRequestDto;
 import org.example.springbootdeveloperassessment.dto.EmployeeResponseDto;
 import org.example.springbootdeveloperassessment.dto.PartialUpdateDto;
 import org.example.springbootdeveloperassessment.service.EmployeeService;
-import org.example.springbootdeveloperassessment.service.EmployeeServiceImpl;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -23,13 +22,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class EmployeeController {
 
-    private final EmployeeService employeeService;
+    private final EmployeeService service;
 
     @PostMapping
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<EmployeeResponseDto> create(@Valid @RequestBody EmployeeRequestDto dto) {
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(employeeService.createEmployee(dto));
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.createEmployee(dto));
     }
 
     @GetMapping
@@ -41,14 +40,14 @@ public class EmployeeController {
             @RequestParam(defaultValue = "id") String sort) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(sort));
-        return ResponseEntity.ok(employeeService.findAll(department, active, pageable));
+        return ResponseEntity.ok(service.findAll(department, active, pageable));
     }
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<EmployeeResponseDto> getById(@PathVariable Long id) {
 
-        return ResponseEntity.ok(employeeService.findById(id));
+        return ResponseEntity.ok(service.findById(id));
     }
 
     @PutMapping("/{id}")
@@ -56,7 +55,7 @@ public class EmployeeController {
     public ResponseEntity<EmployeeResponseDto> update(
             @PathVariable Long id, @Valid @RequestBody EmployeeRequestDto dto){
 
-        return ResponseEntity.ok(employeeService.updateEmployee(id, dto));
+        return ResponseEntity.ok(service.updateEmployee(id, dto));
     }
 
     @PatchMapping("/{id}")
@@ -64,19 +63,19 @@ public class EmployeeController {
     public ResponseEntity<EmployeeResponseDto> partialUpdate(
             @PathVariable Long id, @Valid @RequestBody PartialUpdateDto dto){
 
-        return ResponseEntity.ok(employeeService.partialUpdate(id, dto));
+        return ResponseEntity.ok(service.partialUpdate(id, dto));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> softDelete(@PathVariable Long id) {
 
-        employeeService.softDeleteEmployee(id);
+        service.softDeleteEmployee(id);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}/hard")
     public ResponseEntity<Void> hardDelete(@PathVariable Long id) {
-        employeeService.hardDeleteEmployee(id);
+        service.hardDeleteEmployee(id);
         return ResponseEntity.noContent().build();
     }
 
@@ -84,7 +83,7 @@ public class EmployeeController {
     public ResponseEntity<List<EmployeeResponseDto>> getBySalaryRange(
             @RequestParam BigDecimal min,
             @RequestParam BigDecimal max) {
-        return ResponseEntity.ok(employeeService.findBySalaryRange(min, max));
+        return ResponseEntity.ok(service.findBySalaryRange(min, max));
     }
 
 }

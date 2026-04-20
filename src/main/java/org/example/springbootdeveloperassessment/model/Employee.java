@@ -13,8 +13,7 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@RequiredArgsConstructor
-public abstract class Employee {
+public class Employee {
 
     @Id
     @GeneratedValue
