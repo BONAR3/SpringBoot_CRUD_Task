@@ -15,6 +15,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/employees")
 @RequiredArgsConstructor
@@ -63,5 +66,26 @@ public class EmployeeController {
 
         return ResponseEntity.ok(employeeService.partialUpdate(id, dto));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> softDelete(@PathVariable Long id) {
+
+        employeeService.softDeleteEmployee(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{id}/hard")
+    public ResponseEntity<Void> hardDelete(@PathVariable Long id) {
+        employeeService.hardDeleteEmployee(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/salary-range")
+    public ResponseEntity<List<EmployeeResponseDto>> getBySalaryRange(
+            @RequestParam BigDecimal min,
+            @RequestParam BigDecimal max) {
+        return ResponseEntity.ok(employeeService.findBySalaryRange(min, max));
+    }
+
 }
 
