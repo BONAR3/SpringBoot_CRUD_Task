@@ -17,10 +17,6 @@ import java.time.LocalDateTime;
 @Builder
 public class EmployeeRequestDto {
 
-    @Id
-    @GeneratedValue
-    Long id;
-
     @NotBlank
     @Size(max=50)
     String firstName;
@@ -48,10 +44,5 @@ public class EmployeeRequestDto {
 
     @NotNull
     Boolean active;
-
-    @Column(updatable = false)
-    LocalDateTime createdAt;
-
-    LocalDateTime updatedAt;
 
 }

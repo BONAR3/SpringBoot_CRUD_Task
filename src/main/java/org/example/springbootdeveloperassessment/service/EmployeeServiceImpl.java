@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.springbootdeveloperassessment.dto.PartialUpdateDto;
 import org.example.springbootdeveloperassessment.exception.EmployeeNotFoundException;
+import org.example.springbootdeveloperassessment.model.Department;
 import org.example.springbootdeveloperassessment.model.Employee;
 import org.example.springbootdeveloperassessment.repository.EmployeeRepository;
 import org.example.springbootdeveloperassessment.dto.EmployeeRequestDto;
@@ -13,13 +14,14 @@ import org.example.springbootdeveloperassessment.dto.EmployeeResponseDto;
 import org.example.springbootdeveloperassessment.exception.DuplicateEmailException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -41,7 +43,7 @@ public class EmployeeServiceImpl implements EmployeeService{
 
     @Transactional
     @Override
-    public EmployeeResponseDto createEmployee(@Valid EmployeeRequestDto dto) {
+    public EmployeeResponseDto createEmployee(EmployeeRequestDto dto) {
 
         repository.findByEmail(dto.getEmail()).
                 ifPresent(e -> {throw new DuplicateEmailException("Email already Exist");
@@ -104,6 +106,9 @@ public class EmployeeServiceImpl implements EmployeeService{
 
         if (dto.getSalary() != null) {
             String dept = dto.getDepartment() != null ? dto.getDepartment() : employee.getDepartment();
+            if (dto.getDepartment() == null){
+                validateSalary(employee.getDepartment(), dto.getSalary());
+            }
             validateSalary(dept, dto.getSalary());
             employee.setSalary(dto.getSalary());
         }
@@ -113,6 +118,8 @@ public class EmployeeServiceImpl implements EmployeeService{
         if (dto.getActive() != null) {
             employee.setActive(dto.getActive());
         }
+
+        employee.setUpdatedAt(LocalDateTime.now());
 
         return mapToDto(repository.save(employee));
     }
@@ -152,29 +159,33 @@ public class EmployeeServiceImpl implements EmployeeService{
 
     private void validateSalary(String department, BigDecimal salary){
 
-        if (salary == null)
-            throw new RuntimeException("Salary is empty");
+        validateDepartment(department);
+        boolean acceptsInterns = Department.acceptsInterns(department);
 
-        if (department.equalsIgnoreCase("Intern")) {
-            if (salary.compareTo(new BigDecimal(15000)) < 0)
-                throw new RuntimeException("Minimum salary is 15000");
-        } else
-            if (salary.compareTo(new BigDecimal(30000)) < 0)
-                throw new RuntimeException("Minimum salary is 30000");
+        if (salary == null) {
+            throw new RuntimeException("Salary cannot be null");
+        }
+
+        BigDecimal minSalary = acceptsInterns
+                ? new BigDecimal("15000")
+                : new BigDecimal("30000");
+
+        if (salary.compareTo(minSalary) < 0) {
+            throw new RuntimeException(
+                    "Minimum salary for " + department + " is " + minSalary);
+        }
     }
 
     private Employee mapToEntity(EmployeeRequestDto dto) {
         return Employee.builder()
-                .id(dto.getId())
                 .firstName(dto.getFirstName())
                 .lastName(dto.getLastName())
                 .email(dto.getEmail())
                 .department(dto.getDepartment())
                 .salary(dto.getSalary())
-                .dateOfJoining(dto.getDateOfJoining())
+                .dateOfJoining(LocalDate.now())
                 .active(dto.getActive())
-                .createdAt(dto.getCreatedAt())
-                .updatedAt(dto.getUpdatedAt())
+                .createdAt(LocalDateTime.now())
                 .build();
     }
 
@@ -207,6 +218,13 @@ public class EmployeeServiceImpl implements EmployeeService{
     private Employee findId(Long id) {
         return repository.findById(id)
                 .orElseThrow(() -> new EmployeeNotFoundException("Employee not Found"));
+    }
+
+    private void validateDepartment(String department){
+
+        if (!Department.exists(department)) {
+            throw new RuntimeException("Department not found");
+        }
     }
 
 }

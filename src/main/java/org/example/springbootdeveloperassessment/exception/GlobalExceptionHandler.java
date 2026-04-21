@@ -76,7 +76,7 @@ public class GlobalExceptionHandler {
         }
 
         @ExceptionHandler(Exception.class)
-        public ResponseEntity<Map<String, Object>> handleGenericException(
+        public ResponseEntity<Map<String, Object>> handleGeneralException(
                 Exception ex, WebRequest request) {
 
             log.error("Unexpected error: ", ex);

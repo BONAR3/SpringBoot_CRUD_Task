@@ -60,8 +60,8 @@ public class EmployeeController {
 
     @PatchMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<EmployeeResponseDto> partialUpdate(
-            @PathVariable Long id, @Valid @RequestBody PartialUpdateDto dto){
+    public ResponseEntity<EmployeeResponseDto> partialUpdate(@PathVariable Long id,
+                                                             @Valid @RequestBody PartialUpdateDto dto){
 
         return ResponseEntity.ok(service.partialUpdate(id, dto));
     }

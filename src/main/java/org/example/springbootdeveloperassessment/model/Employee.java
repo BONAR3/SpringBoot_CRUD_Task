@@ -34,7 +34,7 @@ public class Employee {
 
     @NotBlank
     @Size(max=100)
-    String department;
+    private String department;
 
     @NotNull
     @DecimalMin("0.00")
