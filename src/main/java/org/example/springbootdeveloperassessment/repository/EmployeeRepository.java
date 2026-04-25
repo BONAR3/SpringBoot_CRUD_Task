@@ -1,23 +1,25 @@
 package org.example.springbootdeveloperassessment.repository;
 
 import org.example.springbootdeveloperassessment.model.Employee;
-import org.example.springbootdeveloperassessment.dto.EmployeeResponseDto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.awt.print.Pageable;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
 public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
-    List<Employee> findByDepartment(String department);
+    Page<Employee> findByDepartment(String department, Pageable pageable);
+
+    Page<Employee> findByDepartmentAndActive(String department, Boolean active, Pageable pageable);
 
     Optional<Employee> findByEmail(String email);
 
-    List<Employee> findByActiveTrue();
+    Page<Employee> findByActive(Boolean active, Pageable pageable);
 
     @Query("SELECT e FROM Employee e WHERE e.salary BETWEEN :min AND :max")
 

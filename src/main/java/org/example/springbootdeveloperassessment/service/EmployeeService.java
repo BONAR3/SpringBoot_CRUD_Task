@@ -15,7 +15,8 @@ public interface EmployeeService {
 
     EmployeeResponseDto createEmployee (EmployeeRequestDto dto);
 
-    Page<EmployeeResponseDto> findAll (String department, Boolean active, Pageable pageable);
+    Page<EmployeeResponseDto> findAll (String department, Boolean active, String direction,
+                                       String sortBy, int page, int size);
 
     EmployeeResponseDto findById(Long id);
 

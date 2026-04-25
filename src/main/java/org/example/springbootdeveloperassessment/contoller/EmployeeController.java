@@ -25,22 +25,22 @@ public class EmployeeController {
     private final EmployeeService service;
 
     @PostMapping
-    @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<EmployeeResponseDto> create(@Valid @RequestBody EmployeeRequestDto dto) {
 
         return ResponseEntity.status(HttpStatus.CREATED).body(service.createEmployee(dto));
     }
 
     @GetMapping
-    public ResponseEntity<Page<EmployeeResponseDto>> getAll(
+    public ResponseEntity <Page<EmployeeResponseDto>> getAll(
             @RequestParam(required = false) String department,
             @RequestParam(required = false) Boolean active,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "id") String sort) {
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDirection) {
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sort));
-        return ResponseEntity.ok(service.findAll(department, active, pageable));
+
+        return ResponseEntity.ok(service.findAll(department, active, sortDirection, sortBy, page, size));
     }
 
     @GetMapping("/{id}")

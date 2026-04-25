@@ -12,9 +12,7 @@ import org.example.springbootdeveloperassessment.repository.EmployeeRepository;
 import org.example.springbootdeveloperassessment.dto.EmployeeRequestDto;
 import org.example.springbootdeveloperassessment.dto.EmployeeResponseDto;
 import org.example.springbootdeveloperassessment.exception.DuplicateEmailException;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -58,18 +56,28 @@ public class EmployeeServiceImpl implements EmployeeService{
 
     @Override
     @Transactional
-    public Page<EmployeeResponseDto> findAll(String department, Boolean active, Pageable pageable) {
+    public Page<EmployeeResponseDto> findAll(String department, Boolean active, String direction,
+                                             String sortBy, int page, int size) {
 
-        List<Employee> employees = repository.findAll();
-        List<EmployeeResponseDto> dtoResponse = employees.stream().map(this::mapToDto).toList();
+        Sort sort = direction.equalsIgnoreCase("asc")
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
 
-        int start = (int) pageable.getOffset();
-        int end = Math.min(start + pageable.getPageSize(), dtoResponse.size());
-        List<EmployeeResponseDto> page = start >
-                dtoResponse.size() ? Collections.emptyList() :
-                dtoResponse.subList(start,end);
+        Pageable pageable = PageRequest.of(page, size, sort);
 
-        return new PageImpl<>(page, pageable, dtoResponse.size());
+        Page <Employee> employees;
+
+        if (department != null && active != null) {
+            employees = repository.findByDepartmentAndActive(department, active, pageable);
+        } else if (department != null) {
+            employees = repository.findByDepartment(department, pageable);
+        } else if (active != null) {
+            employees = repository.findByActive(active, pageable);
+        } else
+            employees = repository.findAll(pageable);
+
+         return employees.map(this::mapToDto);
+
     }
 
     @Override
