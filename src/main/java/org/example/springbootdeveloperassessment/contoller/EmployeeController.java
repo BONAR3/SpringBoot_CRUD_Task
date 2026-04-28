@@ -4,8 +4,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.springbootdeveloperassessment.dto.EmployeeRequestDto;
 import org.example.springbootdeveloperassessment.dto.EmployeeResponseDto;
+import org.example.springbootdeveloperassessment.dto.ImportResultDto;
 import org.example.springbootdeveloperassessment.dto.PartialUpdateDto;
 import org.example.springbootdeveloperassessment.service.EmployeeService;
+import org.example.springbootdeveloperassessment.service.ImportExcelService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -13,6 +15,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -23,6 +26,7 @@ import java.util.List;
 public class EmployeeController {
 
     private final EmployeeService service;
+    private final ImportExcelService importService;
 
     @PostMapping
     public ResponseEntity<EmployeeResponseDto> create(@Valid @RequestBody EmployeeRequestDto dto) {
@@ -38,7 +42,6 @@ public class EmployeeController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDirection) {
-
 
         return ResponseEntity.ok(service.findAll(department, active, sortDirection, sortBy, page, size));
     }
@@ -84,6 +87,11 @@ public class EmployeeController {
             @RequestParam BigDecimal min,
             @RequestParam BigDecimal max) {
         return ResponseEntity.ok(service.findBySalaryRange(min, max));
+    }
+
+    @PostMapping("/import")
+    public ResponseEntity<ImportResultDto> importExcel(@RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(importService.importExcelFile(file));
     }
 
 }

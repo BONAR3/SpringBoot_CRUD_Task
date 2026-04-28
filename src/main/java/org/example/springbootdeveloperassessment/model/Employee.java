@@ -17,20 +17,20 @@ public class Employee {
 
     @Id
     @GeneratedValue
-    Long id;
+    private Long id;
 
     @NotBlank
     @Size(max=50)
-    String firstName;
+    private String firstName;
 
     @NotBlank
     @Size(max=50)
-    String lastName;
+    private String lastName;
 
     @NotBlank
     @Email
     @Column(unique=true)
-    String email;
+    private String email;
 
     @NotBlank
     @Size(max=100)
@@ -38,19 +38,19 @@ public class Employee {
 
     @NotNull
     @DecimalMin("0.00")
-    BigDecimal salary;
+    private BigDecimal salary;
 
     @NotNull
     @PastOrPresent
-    LocalDate dateOfJoining;
+    private LocalDate dateOfJoining;
 
     @NotNull
-    Boolean active;
+    private Boolean active;
 
     @Column(updatable = false)
-    LocalDateTime createdAt;
+    private LocalDateTime createdAt;
 
-    LocalDateTime updatedAt;
+    private LocalDateTime updatedAt;
 
     @PrePersist
     public void onCreate(){
