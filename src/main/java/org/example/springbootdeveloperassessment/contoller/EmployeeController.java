@@ -1,5 +1,7 @@
 package org.example.springbootdeveloperassessment.contoller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.springbootdeveloperassessment.dto.EmployeeRequestDto;
@@ -7,16 +9,16 @@ import org.example.springbootdeveloperassessment.dto.EmployeeResponseDto;
 import org.example.springbootdeveloperassessment.dto.ImportResultDto;
 import org.example.springbootdeveloperassessment.dto.PartialUpdateDto;
 import org.example.springbootdeveloperassessment.service.EmployeeService;
+import org.example.springbootdeveloperassessment.service.ExportExcelService;
 import org.example.springbootdeveloperassessment.service.ImportExcelService;
+import org.example.springbootdeveloperassessment.service.PdfExportService;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -27,6 +29,8 @@ public class EmployeeController {
 
     private final EmployeeService service;
     private final ImportExcelService importService;
+    private final ExportExcelService exportService;
+    private final PdfExportService pdfExportService;
 
     @PostMapping
     public ResponseEntity<EmployeeResponseDto> create(@Valid @RequestBody EmployeeRequestDto dto) {
@@ -93,6 +97,26 @@ public class EmployeeController {
     public ResponseEntity<ImportResultDto> importExcel(@RequestParam("file") MultipartFile file) {
         return ResponseEntity.ok(importService.importExcelFile(file));
     }
+
+    @GetMapping("/export/excel")
+    public void exportExcel(HttpServletResponse response, @RequestParam(required = false) String department,
+            @RequestParam(required = false) Boolean active) throws IOException {
+
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+
+        String filename = "employees_" + System.currentTimeMillis() + ".xlsx";
+        response.setHeader("Content-Disposition", "attachment; filename=" + filename);
+
+        exportService.exportEmployees(response, department, active);
+    }
+
+    @GetMapping("/export/pdf")
+    @Operation(summary = "Download employee report as PDF")
+    public void exportToPdf(HttpServletResponse response) {
+
+        pdfExportService.export(response);
+    }
+
 
 }
 

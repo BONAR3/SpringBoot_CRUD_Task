@@ -22,8 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import static org.apache.poi.ss.util.SheetUtil.getCell;
-
 @RequiredArgsConstructor
 @Service
 @Transactional
@@ -116,6 +114,8 @@ public class ImportExcelService {
         return dto;
     }
 
+
+
     //Converting cell types to match types in or DB
     private String getCellString(Row row, int index){
 
@@ -129,7 +129,6 @@ public class ImportExcelService {
             default -> cell.toString().trim();
         };
     }
-
 
 
 }

@@ -32,11 +32,7 @@ import java.util.stream.Collectors;
 @Transactional
 public class EmployeeServiceImpl implements EmployeeService{
 
-    private static final BigDecimal INTERN_MIN_SALARY   = new BigDecimal("15000.00");
-    private static final BigDecimal DEFAULT_MIN_SALARY  = new BigDecimal("30000.00");
-
     private final EmployeeRepository repository;
-    private final Validator validator;
 
     @Transactional
     @Override

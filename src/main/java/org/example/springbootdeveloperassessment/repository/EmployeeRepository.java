@@ -17,9 +17,15 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
     Page<Employee> findByDepartmentAndActive(String department, Boolean active, Pageable pageable);
 
-    Optional<Employee> findByEmail(String email);
-
     Page<Employee> findByActive(Boolean active, Pageable pageable);
+
+    List<Employee> findByDepartmentAndActive(String department, Boolean active);
+
+    List<Employee> findByDepartment(String department);
+
+    List<Employee> findByActive(Boolean active);
+
+    Optional<Employee> findByEmail(String email);
 
     @Query("SELECT e FROM Employee e WHERE e.salary BETWEEN :min AND :max")
 
