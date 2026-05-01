@@ -93,7 +93,8 @@ public class EmployeeController {
         return ResponseEntity.ok(service.findBySalaryRange(min, max));
     }
 
-    @PostMapping("/import")
+    @PostMapping(value = "/import", consumes = "multipart/form-data")
+    @Operation(summary = "Import employees from .xlsx file")
     public ResponseEntity<ImportResultDto> importExcel(@RequestParam("file") MultipartFile file) {
         return ResponseEntity.ok(importService.importExcelFile(file));
     }
